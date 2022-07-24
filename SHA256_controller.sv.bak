@@ -1,0 +1,333 @@
+// This module handles all of SHA256 calculations based on Bitcoin protocol.
+// It instantiates SHA256 core and double-hashes the data in order to obtain
+// the correct hash. It is also changes the HEX display to display the hash rate
+// in thousands.
+module SHA256_controller (
+	input CLOCK_50,
+	input calculate,
+	input [95:0] data,
+	input [255:0] midstate,
+	input [255:0] target,
+	output reg [31:0] good_nonce,
+	output done,
+
+	// Seven Segment Displays for displaying the number of hashes over the past second
+	// (in thousands)
+    output [6:0] HEX0,
+    output [6:0] HEX1,
+    output [6:0] HEX2,
+    output [6:0] HEX3,
+    output [6:0] HEX4,
+    output [6:0] HEX5
+);
+	// Defines the number of SHA256 cores used. One core can calculate a hash every 64
+	// cycles, so two cores roughly doubles the hashrate.
+	localparam num_cores = 1;
+
+	// FSM states
+	localparam START = 4'd0, INIT = 4'd1, HASH1 = 4'd2, HASH1_READ = 4'd3, HASH2 = 4'd4, HASH2_READ=4'd5, SEND=4'd6;
+	logic [4:0] next_state, current_state;
+
+	// a constant value that's needed for hash calculations in HASH2 state
+	logic [255:0] hash1;
+	assign hash1 = 256'h8000000000000000000000000000000000000000000000000000000000000100;
+
+	// Signals that interact with SHA256 core
+	logic SHA256_start;
+	logic [511:0] value_source [num_cores-1:0];
+	logic [255:0] init_source [num_cores-1:0];
+	logic [255:0] hash_result[num_cores-1:0];
+	logic [255:0] hash_result_reversed[num_cores-1:0];
+	logic [255:0] desired_target;
+
+	// Timer that counts 64 cycles if timer_enable is 1
+	logic [6:0] timer;
+	logic timer_enable;
+	always_ff @(posedge CLOCK_50) begin
+		if (timer_enable && timer > 7'd0)
+			timer <= timer - 7'd1;
+		else
+			timer <= 7'd64;
+	end
+
+	wire found_nonce;
+	reg done_send;
+	assign done = done_send;
+
+
+	// Finite State Machine
+	always_comb begin
+		case (current_state)
+			START:
+				next_state = INIT;
+			INIT:
+				next_state = HASH1;
+			HASH1:
+				if (timer == 'd0)
+					next_state = HASH1_READ;
+				else
+					next_state = HASH1;
+			HASH1_READ:
+				next_state = HASH2;
+			HASH2:
+				if (timer == 'd0)
+					next_state = HASH2_READ;
+				else
+					next_state = HASH2;
+			HASH2_READ:
+				if (found_nonce)
+					next_state = SEND;
+				else
+					next_state = INIT;
+			SEND:
+				if (done_send)
+					next_state = INIT;
+				else
+					next_state = SEND;
+			default:
+				next_state = START;
+		endcase
+	end
+
+	always_ff @(posedge CLOCK_50 or posedge calculate)
+		if (calculate)
+			current_state <= START;
+		else
+			current_state <= next_state;
+
+
+
+	// Initialize the SHA256 cores
+	genvar i;
+	generate
+		for (i = 0; i < num_cores; i++) begin : SHA256_CORE_LOOP
+			SHA256_core mycore1 (
+				.clk(CLOCK_50),
+				.init(init_source[i]),
+				.value(value_source[i]),
+				.start(SHA256_start),
+				.result(hash_result[i])
+			);
+		end
+	endgenerate
+
+
+	// Perform state-related actions
+	// Set the start signal for SHA256 core 1 cycle before operations commence
+	assign SHA256_start = current_state != HASH2_READ && current_state != SEND &&
+				(current_state == INIT || current_state == HASH1_READ || timer == 'd64);
+
+	// Launch the timer
+	assign timer_enable = (current_state == HASH1 || current_state == HASH2);
+
+	// Keeping track of the current base nonce
+	logic [31:0] nonce;
+	always @(posedge CLOCK_50) begin
+		if (current_state == HASH2_READ)
+			nonce <= nonce + num_cores;
+		else if (current_state == START)
+			nonce <= 'h913914e3;
+			//nonce <= 'd0;
+	end
+
+	// Writing to value_source and init_source. This will happen twice in a loop:
+	// the first time in the state INIT, and the second time in the state HASH1_READ,
+	// because the states that immediately follow involves calculating SHA256
+	logic [31:0] nonce_values [num_cores-1:0];
+	generate
+		for (i = 0; i < num_cores; i++) begin : NONCE_LOOP
+			assign nonce_values[i] = nonce + i;
+		end
+	endgenerate
+
+	generate
+		for (i = 0; i < num_cores; i++) begin : SOURCES_LOOP
+			always_ff@(posedge CLOCK_50) begin
+				if (current_state == INIT) begin
+					init_source[i] <= midstate;
+					value_source[i] <= {data, nonce_values[i][7:0], nonce_values[i][15:8], nonce_values[i][23:16], nonce_values[i][31:24], 8'b10000000, 312'b0, 64'd640};
+					desired_target <= target;
+				end
+				else if (current_state == HASH1_READ) begin
+					init_source[i] <= 256'h6a09e667bb67ae853c6ef372a54ff53a510e527f9b05688c1f83d9ab5be0cd19;
+					value_source[i] <= {hash_result[i], hash1};
+				end
+			end
+		end
+	endgenerate
+
+	// Create wires that reverse the ordering of hash_result. Within each byte the order is not reversed,
+	// but within the entire 32-byte hash, th byte order is reversed. This is an unfortunate consequence
+	// of Bitcoin protocol...
+	genvar j;
+	generate
+		for (i = 0; i < num_cores; i++) begin: REVERSR_RESULT_LOOP
+			for (j = 0; j < 32; j++) begin: REVERSE_RESULT_PER_BIT_LOOP
+				assign hash_result_reversed[i][8*j+:8] = hash_result[i][255-8*j-:8];
+			end
+		end
+	endgenerate
+
+	// At HASH2_READ state, read the values of the hash result and decide if any of the hash values meet the threshold.
+	logic [num_cores-1:0] satisfactory_results;
+	generate
+		for (i = 0; i < num_cores; i++) begin: RESULT_LOOP
+			always_comb begin
+				satisfactory_results[i] <= 0;
+				if (hash_result_reversed[i] < desired_target)
+					satisfactory_results[i] <= 1;
+			end
+		end
+	endgenerate
+
+	assign found_nonce = |satisfactory_results;
+
+	// At SEND state, determine which value from hash_result to send based on which
+	// index of satisfactory_results is 1. Unfortunately I can't think of a faster way...
+	integer index;
+	always_ff @(posedge CLOCK_50) begin
+		if (current_state == SEND) begin
+			if (satisfactory_results[index] == 'd1) begin
+				good_nonce <= nonce - num_cores + index;
+				done_send <= 'd1;
+			end
+			else begin
+				index <= index + 1;
+				done_send <= 'd0;
+			end
+		end
+		else begin
+			index <= 0;
+			done_send <= 'd0;
+		end
+	end
+
+	HEX_driver my_hex_driver (
+		.clk(CLOCK_50),
+		.current_nonce(nonce),
+		.HEX0(HEX0),
+		.HEX1(HEX1),
+		.HEX2(HEX2),
+		.HEX3(HEX3),
+		.HEX4(HEX4),
+		.HEX5(HEX5)
+	);
+
+endmodule
+
+
+// This module maintains an internal counter
+// and timer, and counts the number of times
+// current_nonce updates in a second
+module HEX_driver (
+	input clk,
+	input [31:0] current_nonce,
+    output [6:0] HEX0,
+    output [6:0] HEX1,
+    output [6:0] HEX2,
+    output [6:0] HEX3,
+    output [6:0] HEX4,
+    output [6:0] HEX5
+);
+
+	logic [31:0] last_nonce_value;
+	logic [31:0] hash_rate_per_second;
+	logic [31:0] timer;
+	always_ff @(posedge clk) begin
+		if (timer < 'd50000000)
+			timer <= timer + 1;
+		else begin
+			timer <= 'd0;
+			hash_rate_per_second <= current_nonce - last_nonce_value;
+			last_nonce_value <= current_nonce;
+		end
+	end
+
+	// Convert this to decimal. I'm using a BCD counter, so it will have
+	// pretty much 1 second latency, but hash rate shouldn't matter too much...
+	logic [31:0] BCD_counter [5:0];
+	logic [31:0] BCD [5:0];
+	logic [31:0] hash_rate_backup;
+	always_ff @(posedge clk) begin
+		if (timer == 'd50000000)
+			hash_rate_backup <= hash_rate_per_second;
+		else if (hash_rate_backup > 1000) begin
+			hash_rate_backup -= 1000;
+
+			BCD_counter[0] <= BCD_counter[0] + 1;
+			if (BCD_counter[0] == 'd10) begin
+				BCD_counter[0] <= 0;
+				BCD_counter[1] <= BCD_counter[1] + 1;
+			end
+			if (BCD_counter[1] == 'd10) begin
+				BCD_counter[1] <= 0;
+				BCD_counter[2] <= BCD_counter[2] + 1;
+			end
+			if (BCD_counter[2] == 'd10) begin
+				BCD_counter[2] <= 0;
+				BCD_counter[3] <= BCD_counter[3] + 1;
+			end
+			if (BCD_counter[3] == 'd10) begin
+				BCD_counter[3] <= 0;
+				BCD_counter[4] <= BCD_counter[4] + 1;
+			end
+			if (BCD_counter[4] == 'd10) begin
+				BCD_counter[4] <= 0;
+				BCD_counter[5] <= BCD_counter[5] + 1;
+			end
+		end
+		else
+			// Store the calculated value into BCD so it doesn't fluctuate when displayed
+			BCD <= BCD_counter;
+	end
+
+	hex_decoder decoder0(
+		.hex_digit(BCD[0]),
+		.segments(HEX0)
+	);
+	hex_decoder decoder1(
+		.hex_digit(BCD[1]),
+		.segments(HEX1)
+	);
+	hex_decoder decoder2(
+		.hex_digit(BCD[2]),
+		.segments(HEX2)
+	);
+	hex_decoder decoder3(
+		.hex_digit(BCD[3]),
+		.segments(HEX3)
+	);
+	hex_decoder decoder4(
+		.hex_digit(BCD[4]),
+		.segments(HEX4)
+	);
+	hex_decoder decoder5(
+		.hex_digit(BCD[5]),
+		.segments(HEX5)
+	);
+
+endmodule
+
+// HEX decoder module.
+module hex_decoder
+(
+	input [3:0] hex_digit,
+	output logic [6:0] segments
+);
+    always_comb begin
+        case (hex_digit)
+			// only goes from 0 to 9
+            4'h0: segments = 7'b1000000;
+            4'h1: segments = 7'b1111001;
+            4'h2: segments = 7'b0100100;
+            4'h3: segments = 7'b0110000;
+            4'h4: segments = 7'b0011001;
+            4'h5: segments = 7'b0010010;
+            4'h6: segments = 7'b0000010;
+            4'h7: segments = 7'b1111000;
+            4'h8: segments = 7'b0000000;
+            4'h9: segments = 7'b0011000;
+            default: segments = 7'b1111111;
+        endcase
+	end
+endmodule

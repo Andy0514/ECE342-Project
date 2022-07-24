@@ -1,0 +1,360 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Users/Andy/OneDrive/2022W/ECE342/Project/SHA256_core
+vchoice
+Z1 DXx6 sv_std 3 std 0 22 AD7iAPLo6nTIKk<N0eo=D3
+Z2 !s110 1649381746
+!i10b 1
+!s100 _n^MOBVPgFf:Q_AFG1[Hl3
+I9kVJEd^DGKek3]IS3?24:3
+Z3 VDg1SIo80bB@j0V0VzS_@n1
+Z4 !s105 SHA256_operations_sv_unit
+S1
+Z5 dC:/Users/Andy/OneDrive/2022W/ECE342/Project/SHA256_full
+Z6 w1647541574
+Z7 8SHA256_operations.sv
+Z8 FSHA256_operations.sv
+L0 32
+Z9 OV;L;10.5b;63
+r1
+!s85 0
+31
+Z10 !s108 1649381745.000000
+Z11 !s107 SHA256_controller.sv|top.sv|top_tb.sv|SHA256_operations.sv|SHA256_core.sv|
+Z12 !s90 -reportprogress|300|SHA256_core.sv|SHA256_operations.sv|top_tb.sv|top.sv|SHA256_controller.sv|
+!i113 1
+Z13 tCvgOpt 0
+vdut
+R1
+!s110 1647231952
+!i10b 1
+!s100 1`UogoG7zQ2aa>K]M2DOU2
+I`?^`?n6MfRQXhmlE9[NEG1
+R3
+Z14 !s105 top_tb_sv_unit
+S1
+R0
+w1647229240
+Z15 8top_tb.sv
+Z16 Ftop_tb.sv
+L0 2
+R9
+r1
+!s85 0
+31
+!s108 1647231952.000000
+!s107 top_tb.sv|SHA256_operations.sv|SHA256_core.sv|
+!s90 -reportprogress|300|SHA256_core.sv|SHA256_operations.sv|top_tb.sv|
+!i113 1
+R13
+vdut_controller
+R1
+R2
+!i10b 1
+!s100 G=AE68IQBB:@d>lzK6YS01
+IYN@WQ:llRQEJOid6>FgYg3
+R3
+R14
+S1
+R5
+Z17 w1647918126
+R15
+R16
+Z18 L0 48
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+vdut_sha256_core
+R1
+R2
+!i10b 1
+!s100 ajbB9[Q@2RA<=oaIc[0Km2
+I`0m6MdGSb>j1enB4BfeHE0
+R3
+R14
+S1
+R5
+R17
+R15
+R16
+L0 2
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+vdut_top
+R1
+!s110 1647886727
+!i10b 1
+!s100 oX]0M>WB<O_l=lF55L;:O3
+I;B@fKPN]RELz>PX2ZU>?:3
+R3
+R14
+S1
+dF:/SHA256_full
+w1647545674
+R15
+R16
+R18
+R9
+r1
+!s85 0
+31
+!s108 1647886727.000000
+R11
+R12
+!i113 1
+R13
+vhex_decoder
+R1
+R2
+!i10b 1
+!s100 >kINL[NNF?Ploo6faGaT23
+I]Q1QgAVUTO5_^M44N`i_`3
+R3
+Z19 !s105 SHA256_controller_sv_unit
+S1
+R5
+Z20 w1649381744
+Z21 8SHA256_controller.sv
+Z22 FSHA256_controller.sv
+L0 333
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+vHEX_driver
+R1
+R2
+!i10b 1
+!s100 a]aHDHF>:R7joH2CUbgO]3
+IZCRA2IBLgDQEEGSgMMb`23
+R3
+R19
+S1
+R5
+R20
+R21
+R22
+L0 236
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+n@h@e@x_driver
+vmajority
+R1
+R2
+!i10b 1
+!s100 Nj`[d[gj2GLamUiJ?2?b72
+IomGaZlK;1H7Y21d9>RJ1l1
+R3
+R4
+S1
+R5
+R6
+R7
+R8
+L0 39
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+vSHA256_controller
+R1
+R2
+!i10b 1
+!s100 7VeD2hIFXWHLK=PQFnYK20
+IPo099?nUE?4V;EokVGKFm2
+R3
+R19
+S1
+R5
+R20
+R21
+R22
+L0 5
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+n@s@h@a256_controller
+vSHA256_core
+R1
+R2
+!i10b 1
+!s100 GHhj2PR[Y`37REb>DMNhL3
+I;W=Qgm5ERd11?<_LdbkaK1
+R3
+!s105 SHA256_core_sv_unit
+S1
+R5
+R6
+8SHA256_core.sv
+FSHA256_core.sv
+L0 15
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+n@s@h@a256_core
+vSIGMA0
+R1
+R2
+!i10b 1
+!s100 hBN?e9JhCFW1`33fA_?3o1
+IkCDU:GBb7UFg2[04YS]N21
+R3
+R4
+S1
+R5
+R6
+R7
+R8
+L0 20
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+n@s@i@g@m@a0
+vsigma0
+R1
+R2
+!i10b 1
+!s100 aEZ4GA91eU5beL^iBCCOZ2
+IThJmj=J35hj]bUf9XN8933
+R3
+R4
+S1
+R5
+R6
+R7
+R8
+L0 4
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+vSIGMA1
+R1
+R2
+!i10b 1
+!s100 65`_M4VKAke12>[:Dh3VF2
+I8E<b<9H<HhIDK`R7LO6Dl3
+R3
+R4
+S1
+R5
+R6
+R7
+R8
+L0 26
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+n@s@i@g@m@a1
+vsigma1
+R1
+R2
+!i10b 1
+!s100 Q1hHE8X5^eBYLB26U`D9R3
+ISYgbaB4PEfDRcWVRO]=NT0
+R3
+R4
+S1
+R5
+R6
+R7
+R8
+L0 12
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13
+vtop
+R1
+R2
+!i10b 1
+!s100 Y<bIgbzjMbhHiCa_n>><S0
+ITGHPMOZBneHQVLm]:JCo33
+R3
+!s105 top_sv_unit
+S1
+R5
+w1648130077
+8top.sv
+Ftop.sv
+L0 7
+R9
+r1
+!s85 0
+31
+R10
+R11
+R12
+!i113 1
+R13

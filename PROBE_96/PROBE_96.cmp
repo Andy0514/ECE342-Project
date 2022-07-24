@@ -1,0 +1,7 @@
+	component PROBE_96 is
+		port (
+			source_clk : in  std_logic                     := 'X'; -- clk
+			source     : out std_logic_vector(95 downto 0)         -- source
+		);
+	end component PROBE_96;
+

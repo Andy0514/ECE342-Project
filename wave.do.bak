@@ -1,0 +1,6 @@
+vlib work
+vlog SHA256_core.sv SHA256_operations.sv top_tb.sv
+vsim dut
+add wave *
+log *
+run -all

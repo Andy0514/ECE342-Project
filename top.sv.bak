@@ -1,0 +1,10 @@
+module top (
+
+	input CLOCK_50
+);
+
+
+	// This is the testing module that instantiates the SHA256 core
+
+
+endmodule
